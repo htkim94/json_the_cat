@@ -1,23 +1,32 @@
 const request = require("request");
-const breedName = process.argv[2];
 
-request(
-  `https://api.thecatapi.com/v1/breeds/search?q=${breedName}`,
-  (error, response, body) => {
-    if (error) {
-      console.error('Invalid URI, please check the URI');
-      // console.log(response && response.statusCode);
-    } else {
-      if (body.length === 0) {
-        console.log("Requested Breed Not Found");
+const fetchBreedDescription = (breedName, callback) => {
+  request(
+    `https://api.thecatapi.com/v1/breeds/search?q=${breedName}`,
+    (error, response, body) => {
+      if (error) {
+        callback(error, null);
       } else {
         const data = JSON.parse(body);
-        if (data.hasOwnProperty("message")) {
-          console.log(data.message);
+        if (data.length === 0) {
+          callback("Requested Breed Not Found", null);
         } else {
-          console.log(data[0].description);
+          if (data.hasOwnProperty("message")) {
+            callback(data.message, null);
+          } else if (data.length === 1) {
+            callback(null, data[0].description);
+          } else {
+            callback(
+              "Multiple results came up, please narrow down your search",
+              null
+            );
+          }
         }
       }
     }
-  }
-);
+  );
+};
+
+module.exports = {
+  fetchBreedDescription,
+};
